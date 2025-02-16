@@ -1,0 +1,27 @@
+{% comment %} {% extends "index.html" %}
+{% load static %}
+
+
+{% block title %}
+Registro
+{% endblock title %}
+
+
+{% block index %}
+
+{% block extrajs %}
+<script src="{% static 'js/index.js' %}"> </script>
+{% endblock extrajs %}
+
+<section class="container m-5">
+
+    <button ><iclass="fa-solid fa-user-plus"></i> Agregar usuario</button>
+
+    <div class="modal fade" id="creacion" role="dialog">
+    </div>
+    <div class="modal fade" id="edicion" role="dialog">
+    </div>
+    <div class="modal fade" id="eliminacion" role="dialog">
+    </div>
+</section>
+{% endblock index %} {% endcomment %}

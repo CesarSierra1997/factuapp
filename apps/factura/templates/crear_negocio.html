@@ -1,0 +1,49 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block title %}Registrar Negocio{% endblock %}
+
+{% block index %}
+<div class="container py-5">
+    <h2 class="text-center mb-4">Registrar Nuevo Negocio</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_razonSocial" class="form-label">Razón Social</label>
+                        {{ form.razonSocial }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_nit" class="form-label">NIT</label>
+                        {{ form.nit }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_logo" class="form-label">Logo</label>
+                        {{ form.logo }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_descripcion" class="form-label">Descripción</label>
+                        {{ form.descripcion }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_sitioweb" class="form-label">Sitio Web</label>
+                        {{ form.sitioweb }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_telefono" class="form-label">Teléfono</label>
+                        {{ form.telefono }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">Correo Electrónico</label>
+                        {{ form.email }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Registrar Negocio</button>
+                    <a href="{% url 'factura:inicio_negocios' %}" class="btn btn-danger w-100 mt-1">Volver a negocioso</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

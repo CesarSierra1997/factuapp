@@ -1,0 +1,15 @@
+<div class="modal-dialog modals-default ls">
+    <div class="modal-content p-2">
+        <div class="modal-header">
+            Eliminación de {{ object }}
+            <button type="button" class="btn-close" aria-label="Close"  data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">{% csrf_token %}
+            <h3><strong>¿Desea eliminar {{object}} ?</strong></h3>
+        </div>
+        <div class="footer">
+            <button type="button" id="boton_eliminar_home52" class="boton-estilizado" data-olign="right" onclick="eliminar({{ object.pk }});"><strong>Eliminar</strong></button>
+            <button type="button" id="boton_cancelar_home52" class="boton-estilizado" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+    </div>
+</div>

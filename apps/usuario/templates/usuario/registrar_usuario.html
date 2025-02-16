@@ -1,0 +1,22 @@
+<div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content p-2">
+        <div class="modal-header">
+            <h2 class="modal-title">Registro de Usuario </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+
+            <form id="form_creacion" action="{% url 'usuario:registrar_usuario' %}" method="POST">
+                <div id="errores"></div>
+                {% csrf_token %}
+                {{form.as_p}}
+
+                <div class="footer">
+                    <button id="boton_creacion" class="boton-estilizado" type="button" onclick="registrar()">Registrar usuario</button>
+                    <button id="boton_cancelar_home52" class="boton-estilizado" type="button" data-bs-dismiss="modal" >Cancelar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

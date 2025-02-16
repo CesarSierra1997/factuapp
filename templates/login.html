@@ -1,0 +1,68 @@
+{% extends "index.html" %}
+{% block title %}
+Inicio de Sesión
+{% endblock title %}
+{% load static %}
+{% block index %}
+<main class="hero" >
+        <div class="container">
+            <div class="card-header">
+                <h4>Iniciar Sesión
+                </h4>
+            </div>
+            <div class="card-body card-block">
+                <div class="login-form">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div form-group>
+                            <label">Nombre de Usuario</label>
+                                {{form.username}}
+                        </div>
+                        <div form-group>
+                            <label">Contraseña</label>
+                                {{form.password}}
+                        </div>
+                        <button type="submit" style="width: 100%;" class="btn btn-primary mt-2">Iniciar Sesión</button>
+                    </form>
+                    <hr class="divider">
+            {% if not form.errors %} <!-- Mostrar errores -->
+
+                    <p>
+                        Si no cuenta con credenciales de acceso, <br>por favor registre una cuenta en el sistema
+                    </p>
+                    <div class="card-footer text-center px-2">
+                        <a href="#" class="btn btn-outline-dark bg-gradient btn-lg">Olvide mi Contraseña</a>
+                        <a href="#" class="btn btn-outline-dark bg-gradient btn-lg">Informar un error</a>
+                    </div>
+                </div>
+            </div>
+            {% else %} <!-- Mostrar errores -->
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <strong>Advertencia:</strong> Por favor, corrija los siguientes errores:
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <strong>Sugerencias:</strong> Si no cuenta con credenciales de acceso:
+                <ul>
+                    <li>Por favor, comuníquese con el administrador del sistema y solicite su registro</li>
+                    <li>
+                        <div class="text px-2">
+                            <a href="" class="btn btn-outline-dark bg-gradient btn-lg">Olvide mi Contraseña</a>
+                            <a href="" class="btn btn-outline-dark bg-gradient btn-lg  ">Informar un error</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+</main>
+
+{% endblock index %}

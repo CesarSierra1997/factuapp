@@ -1,0 +1,59 @@
+{% extends 'index.html' %}
+{% block title %}Productos{% endblock title %}
+
+{% block index %}
+<div class="container mt-5">
+    <div class="card shadow-sm p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="card border-0">
+                <h2 class="fw-bold">{{ negocio.razonSocial }}</h2>
+                <p class="text-muted">Lista de productos/servicios disponibles</p>
+            </div>
+            <div>
+                <a href="{% url 'factura:crear_producto' negocio.id %}" class="btn btn-outline-primary">Agregar producto</a>
+            </div>
+        </div>
+
+
+        
+        <!-- Tabla responsive -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Valor</th>
+                        <th scope="col">Fecha Creación</th>
+                        <th scope="col" class="text-center">Opciones</th>
+                    </tr>
+                </thead>
+                <tbody >
+                    {% for producto in negocio.productos.all|dictsort:"id" %}
+                    <tr>
+                        <td data-label="#"> {{ forloop.counter }}</td>
+                        <td data-label="Nombre">{{ producto.nombre }}</td>
+                        <td data-label="Valor">${{ producto.valor }}</td>
+                        <td data-label="Fecha Creación">{{ producto.fechaCreacion|date:"d M Y, h:i A" }}</td>
+                        <td data-label="Opciones" class="text-center">
+                            <a href=" " class="btn btn-warning btn-sm">Editar</a>
+                            <a href="" class="btn btn-danger btn-sm">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No hay productos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>                
+            </table>
+        </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="mt-4 mb-4 d-flex justify-content-between">
+        <a href="{% url 'factura:detalle_negocio' negocio.id %}" class="btn btn-secondary">Volver al negocio</a>
+    </div>
+</div>
+{% endblock index %}
+

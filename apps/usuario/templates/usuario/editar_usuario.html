@@ -1,0 +1,22 @@
+<div class="modal-dialog modal-lm" role="document">
+    <div class="modal-content p-1">
+        <div class="modal-header">
+            <h2 class="modal-title">Edicion de usuario - {{object.id}} </h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-3">
+
+            <form id="form_edicion" action="{% url 'usuario:editar_usuario' object.id %}" method="POST">
+                <div id="erroresEdicion"></div>
+                {% csrf_token %}
+                {{form.as_p}}
+                <div class="footer">
+                    <button id="boton_edicion" class="boton-estilizado" type="button"
+                    onclick="editar()">Confirmar cambios</button>
+                    <button id="boton_cancelar_home52" class="boton-estilizado" type="button" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
