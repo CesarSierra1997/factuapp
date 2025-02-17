@@ -1,6 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, CreateView, DetailView, ListView, UpdateView, DeleteView, FormView
 from django.views import View
+from django.forms import inlineformset_factory
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q
@@ -47,7 +48,7 @@ class DetailNegocio(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['facturas'] = Factura.objects.filter(productoServicio__negocio=self.object)
+        context['detalles'] = DetalleFactura.objects.filter(producto__negocio=self.object)
         return context
 
 
@@ -111,28 +112,66 @@ class CrearProducto(LoginRequiredMixin, CreateView):
         context['negocio'] = Negocio.objects.get(pk=self.kwargs['negocio_id'])
         return context
 
-class CrearFactura(LoginRequiredMixin, CreateView):
+
+# Crear el formset para los detalles de la factura
+# DetalleFacturaFormSet = inlineformset_factory(
+#     Factura, DetalleFactura, form=FormDetalleFactura, extra=1, can_delete=True
+# )
+
+
+import json
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponseRedirect
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+
+class CrearFactura( CreateView):
     model = Factura
     form_class = FormFactura
-    template_name = 'factura/crear_factura.html'
-    success_url = reverse_lazy('factura:detalle_negocio')
-
-    def get_form_kwargs(self):
-        """ Agregar el negocio al formulario para filtrar los productos """
-        kwargs = super().get_form_kwargs()
-        kwargs['negocio'] = Negocio.objects.get(pk=self.kwargs['negocio_id'])
-        return kwargs
+    template_name = "factura/crear_factura.html"
 
     def form_valid(self, form):
-        negocio = Negocio.objects.get(pk=self.kwargs['negocio_id'])
-        form.instance.negocio = negocio
-        messages.success(self.request, 'Factura creada correctamente!')
-        return super().form_valid(form)
+        # Guardamos la Factura
+        self.object = form.save(commit=False)
+        negocio_id = self.kwargs.get("negocio_id")
+        negocio = get_object_or_404(Negocio, id=negocio_id)
+        self.object.negocio = negocio
+        self.object.save()
 
-    def get_success_url(self):
-        return reverse_lazy('factura:detalle_negocio', kwargs={'negocio_id': self.object.negocio.id})
+        # Obtenemos el JSON de detalles
+        detalles_json = self.request.POST.get("detalles_json", "[]")
+        try:
+            detalles = json.loads(detalles_json)
+        except json.JSONDecodeError:
+            detalles = []
+
+        # Creamos cada DetalleFactura
+        for detalle in detalles:
+            producto_id = detalle.get("producto_id")
+            cantidad = detalle.get("cantidad", 1)
+            
+            # Obtenemos el producto (ProductoServicio)
+            producto = get_object_or_404(ProductoServicio, id=producto_id)
+            
+            # Crea el detalle solo con los campos que existen en el modelo
+            DetalleFactura.objects.create(
+                factura=self.object,
+                producto=producto,
+                cantidad=cantidad,
+            )
+        self.object.calcular_total()
+
+        # Redirigimos normalmente
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['negocio'] = Negocio.objects.get(pk=self.kwargs['negocio_id'])  
+        negocio_id = self.kwargs.get('negocio_id')
+        negocio = get_object_or_404(Negocio, id=negocio_id)
+        context['negocio'] = negocio
+        # Listamos productos de este negocio
+        context['productos'] = ProductoServicio.objects.filter(negocio=negocio)
         return context
+
+    def get_success_url(self):
+        return reverse_lazy("factura:detalle_negocio", kwargs={"negocio_id": self.object.negocio.id})

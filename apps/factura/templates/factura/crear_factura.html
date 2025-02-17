@@ -1,31 +1,170 @@
 {% extends 'index.html' %}
 {% load static %}
 
-{% block title %}Crear factura{% endblock title %}
+{% block title %}Crear Factura{% endblock title %}
 
 {% block index %}
-
 <div class="container py-5">
-    <h3 class="text-center">Crear nueva factura</h3>
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg p-4">
-                <div class="flex d-flex justify-content-between align-items-center mb-4">
-                <h5 class=" mb-2">{{ negocio.razonSocial }}</h4>
-                <img src="{{ negocio.logo }}" alt="Logo del negocio" class="img-thumbnail me-3" width="50">
-                </div>
-                <hr>
-                <h5 class="card-header my-1">Datos de la factura</h5>
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        {{ form.as_p}}
-                    </div>
-                    <button type="submit" class="btn btn-success w-100">Crear factura</button>
-                    <a href="{% url 'factura:detalle_negocio' negocio.id %}" class="btn btn-secondary w-100 mt-1">Volver al negocio</a>
-                </form>
+    <div class="card shadow-lg p-4">
+        <!-- Encabezado con datos del negocio -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h5 class="mb-0">{{ negocio.razonSocial }}</h5>
+                <small class="text-muted">NIT {{ negocio.nit }}</small>
             </div>
+            <img src="{{ negocio.logo }}" alt="Logo del negocio" class="img-thumbnail" style="width: 80px;">
         </div>
+        <hr>
+        <h5 class="card-header mb-3">Datos de la Factura</h5>
+
+        <!-- Formulario principal -->
+        <form id="factura-form" method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+                {{ form.as_p }}
+            </div>
+
+            <!-- Tabla de detalles -->
+            <h5>Detalles de la Factura</h5>
+            <div class="table-responsive">
+                <table id="detalles-table" class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">Total:</td>
+                            <td id="factura-total" class="fw-bold">$0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Controles para agregar productos -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="producto-select">Producto</label>
+                    <select id="producto-select" class="form-control">
+                        <option value="">Seleccione un producto</option>
+                        {% for prod in productos %}
+                        <option value="{{ prod.id }}" data-precio="{{ prod.valor }}">
+                            {{ prod.nombre }} ({{ prod.valor }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="cantidad">Cantidad</label>
+                    <input type="number" id="cantidad" class="form-control" value="1" min="1">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" id="agregar-detalle" class="btn btn-primary w-100">
+                        Agregar Producto
+                    </button>
+                </div>
+            </div>
+
+            <!-- Campo oculto para enviar el JSON con los detalles -->
+            <input type="hidden" name="detalles_json" id="detalles-json">
+            <button type="submit" class="btn btn-success w-100">
+                Crear Factura
+            </button>
+        </form>
+
+        <!-- Información legal -->
+        <div class="mt-4">
+            <p class="small text-muted">
+                Esta factura es un documento legal emitido por {{ negocio.razonSocial }}. La información contenida es confidencial y destinada únicamente para el receptor. Si usted no es el destinatario, notifique inmediatamente al emisor y elimine este documento.
+            </p>
+            <p class="small text-muted">
+                Todos los precios están sujetos a cambios sin previo aviso y se rigen por los términos y condiciones establecidos por {{ negocio.razonSocial }}.
+            </p>
+            <p class="small text-muted mb-0">
+                © {{ negocio.razonSocial }} - Todos los derechos reservados.
+            </p>
+        </div>
+
+        <a href="{% url 'factura:detalle_negocio' negocio.id %}" class="btn btn-secondary w-100 mt-3">
+            Volver al negocio
+        </a>
     </div>
 </div>
+
+<!-- Script para manejo de detalles y actualización del total -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let detalles = [];  // Array para almacenar los detalles
+    let tableBody = document.querySelector("#detalles-table tbody");
+    let selectProducto = document.getElementById("producto-select");
+    let inputCantidad = document.getElementById("cantidad");
+    let btnAgregar = document.getElementById("agregar-detalle");
+    let hiddenDetalles = document.getElementById("detalles-json");
+
+    // Función para actualizar el total mostrado en la tabla
+    function updateTotal() {
+        let totalSum = detalles.reduce((acc, detalle) => acc + detalle.total, 0);
+        document.getElementById('factura-total').textContent = '$' + totalSum.toFixed(2);
+    }
+
+    // Agregar un detalle al hacer clic en "Agregar Producto"
+    btnAgregar.addEventListener("click", function() {
+        let productoId = selectProducto.value;
+        if (!productoId) {
+            alert("Debe seleccionar un producto");
+            return;
+        }
+        let productoNombre = selectProducto.options[selectProducto.selectedIndex].text;
+        let precioUnitario = parseFloat(selectProducto.options[selectProducto.selectedIndex].dataset.precio);
+        let cantidad = parseInt(inputCantidad.value, 10);
+        if (isNaN(cantidad) || cantidad <= 0) {
+            alert("Cantidad no válida");
+            return;
+        }
+        let total = precioUnitario * cantidad;
+        let detalle = {
+            producto_id: productoId,
+            cantidad: cantidad,
+            precio_unitario: precioUnitario,
+            total: total
+        };
+        detalles.push(detalle);
+        let row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${productoNombre}</td>
+            <td>${cantidad}</td>
+            <td>$${precioUnitario.toFixed(2)}</td>
+            <td>$${total.toFixed(2)}</td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm eliminar-detalle">X</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+        updateTotal();
+    });
+
+    // Eliminar un detalle al hacer clic en el botón "X"
+    tableBody.addEventListener("click", function(e) {
+        if (e.target.classList.contains("eliminar-detalle")) {
+            let tr = e.target.closest("tr");
+            let rowIndex = tr.rowIndex - 1; // Resta 1, ya que la primera fila es el encabezado
+            detalles.splice(rowIndex, 1);
+            tr.remove();
+            updateTotal();
+        }
+    });
+
+    // Antes de enviar, guarda el array de detalles en el input oculto
+    document.getElementById("factura-form").addEventListener("submit", function() {
+        hiddenDetalles.value = JSON.stringify(detalles);
+    });
+});
+</script>
 {% endblock %}

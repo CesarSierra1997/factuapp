@@ -1,3 +1,4 @@
+from django.forms import inlineformset_factory
 from django import forms
 from .models import *
 
@@ -80,51 +81,46 @@ class FormProductoServicio(forms.ModelForm):
 class FormFactura(forms.ModelForm):
     class Meta:
         model = Factura
-        fields = ['numeroFactura', 'tipoDocumento', 'numeroDocumento', 'nombreCliente', 'email', 'productoServicio', 'pagado','total']
+        fields = ['numeroFactura', 'tipoDocumento', 'numeroDocumento', 'nombreCliente', 'email', 'pagado']
+
         widgets = {
-            'numeroFactura': forms.NumberInput(
-                attrs={
-                    'class':'form-control',
-                    'placeholder':'Número de factura',
-                    'required':'required'
-                }
-            ),
-            'tipoDocumento': forms.Select(
-                attrs={
-                    'class': 'form-control',
-                    'placeholder': 'Seleccione el tipo de documento'
-                }),
-            'numeroDocumento': forms.NumberInput(
-                attrs={'class': 'form-control',
-                       'placeholder': 'Ingrese el numero de documento'
-                }),
-            'nombreCliente': forms.TextInput(
-                attrs={
-                    'class':'form-control',
-                    'placeholder':'Ingrese el nombre del cliente',
-                    'required':'required'
-                }
-            ),
-            'email': forms.EmailInput(
-                attrs={
-                    'class':'form-control',
-                    'placeholder':'Correo electrónico'
-                }
-            ),
-            'productoServicio': forms.Select(
-                attrs={
-                    'class': 'form-control',
-                    'placeholder': 'Seleccione el producto o servicio'
-                }),
-            'pagado': forms.CheckboxInput(
-                attrs={
-                    'placeholder':'Ingrese si el cliente ha pagado la factura',
-                }),
+            'numeroFactura': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Número de factura'}),
+            'tipoDocumento': forms.Select(attrs={'class': 'form-control'}),
+            'numeroDocumento': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Número de documento'}),
+            'nombreCliente': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del cliente'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Correo electrónico'}),
+            'pagado': forms.CheckboxInput(),
+        }
+
+
+from django.forms import BaseModelFormSet
+
+class FormDetalleFactura(forms.ModelForm):
+    class Meta:
+        model = DetalleFactura
+        fields = ['producto', 'cantidad']
+
+        widgets = {
+            'producto': forms.Select(attrs={'class': 'form-control', 'required': 'required'}),
+            'cantidad': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         }
 
     def __init__(self, *args, **kwargs):
-        negocio = kwargs.pop('negocio', None)  # Obtener el negocio pasado desde la vista
+        negocio_id = kwargs.pop('negocio_id', None)  # Extraer el negocio antes de llamar a super()
         super().__init__(*args, **kwargs)
-        if negocio:
-            self.fields['productoServicio'].queryset = ProductoServicio.objects.filter(negocio=negocio)
+        if negocio_id:
+            self.fields['producto'].queryset = ProductoServicio.objects.filter(negocio_id=negocio_id)
 
+class BaseDetalleFacturaFormSet(BaseModelFormSet):
+    def __init__(self, *args, **kwargs):
+        self.negocio_id = kwargs.pop('negocio_id', None)  # Extraer negocio antes de llamar a super()
+        super().__init__(*args, **kwargs)
+        for form in self.forms:
+            form.negocio_id = self.negocio_id  # Pasar negocio_id a cada formulario dentro del formset
+
+# DetalleFacturaFormSet = forms.modelformset_factory(
+#     DetalleFactura,
+#     form=FormDetalleFactura,
+#     formset=BaseDetalleFacturaFormSet,
+#     extra=1
+# )
