@@ -21,12 +21,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-br37y!496-%--p1^vl8t3orobh+e2^3mx&v*)(5qviovww4%!$'
+# SECRET_KEY = 'django-insecure-br37y!496-%--p1^vl8t3orobh+e2^3mx&v*)(5qviovww4%!$'
+SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')#RENDER
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = 'RENDER' not in os.environ #RENDER
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = []#Render
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
@@ -86,6 +91,13 @@ DATABASES = {
     }
 }
 
+# Configuración para producción
+import logging
+import dj_database_url
+
+if os.getenv('RENDER') == 'TRUE':
+    logging.warning("Using production database settings")
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -128,9 +140,22 @@ LOGOUT_REDIRECT_URL = reverse_lazy('login')
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/')]
-APPEND_SLASH = True
+# Agregar STATIC_ROOT para producción
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static/')]
+
+if not DEBUG:#RENDER
+    # Tell Django to copy statics to the `staticfiles` directory
+    # in your application directory on Render.
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    # Turn on WhiteNoise storage backend that takes care of compressing static files
+    # and creating unique names for each version so they can safely be cached forever.
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    APPEND_SLASH = True
+
+# Configurar WhiteNoise para la compresión y el caché en producción
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 MEDIA_URL = '/media/'
