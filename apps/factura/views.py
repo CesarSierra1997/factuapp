@@ -1,16 +1,14 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, CreateView, DetailView, ListView, UpdateView, DeleteView, FormView
-from django.views import View
 from django.forms import inlineformset_factory
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q
-from django.http import Http404,HttpResponse
+from django.http import Http404,HttpResponse, HttpResponseRedirect
+import json
 from django.utils import timezone
 from django.contrib import messages
-from openpyxl import Workbook
 from datetime import datetime
-from django.db.models import Q
 from ..usuario.mixin import *
 from .models import *
 from .forms import *
@@ -48,8 +46,9 @@ class DetailNegocio(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['detalles'] = DetalleFactura.objects.filter(producto__negocio=self.object)
+        context['facturas'] = Factura.objects.filter(negocio=self.object)
         return context
+    
 
 
 class EditarNegocio(LoginRequiredMixin, UpdateView):
@@ -112,19 +111,6 @@ class CrearProducto(LoginRequiredMixin, CreateView):
         context['negocio'] = Negocio.objects.get(pk=self.kwargs['negocio_id'])
         return context
 
-
-# Crear el formset para los detalles de la factura
-# DetalleFacturaFormSet = inlineformset_factory(
-#     Factura, DetalleFactura, form=FormDetalleFactura, extra=1, can_delete=True
-# )
-
-
-import json
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponseRedirect
-from django.views.generic import CreateView
-from django.urls import reverse_lazy
-
 class CrearFactura( CreateView):
     model = Factura
     form_class = FormFactura
@@ -175,3 +161,44 @@ class CrearFactura( CreateView):
 
     def get_success_url(self):
         return reverse_lazy("factura:detalle_negocio", kwargs={"negocio_id": self.object.negocio.id})
+    
+class VerFactura(LoginRequiredMixin, DetailView):
+    model = Factura
+    template_name = 'factura/ver_factura.html'
+    pk_url_kwarg = 'factura_id'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['factura'] = self.object
+        return context
+
+
+from django.shortcuts import render
+from django.http import HttpResponse
+from xhtml2pdf import pisa
+from io import BytesIO
+from .models import Factura
+
+def generar_pdf(request, factura_id):
+    # Obtener la factura a partir de su ID
+    factura = Factura.objects.get(id=factura_id)
+
+    # Renderizar el template con la factura
+    html_content = render(request, 'factura/pdf_template.html', {'factura': factura}).content.decode('utf-8')
+
+    # Crear un objeto BytesIO para almacenar el PDF
+    pdf_buffer = BytesIO()
+
+    # Convertir el contenido HTML a PDF
+    pisa_status = pisa.CreatePDF(html_content, dest=pdf_buffer)
+
+    # Si la conversión fue exitosa, enviar el PDF como respuesta
+    if pisa_status.err:
+        return HttpResponse('Error al generar el PDF', status=500)
+
+    # Crear la respuesta HTTP para la descarga del PDF
+    pdf_buffer.seek(0)
+    response = HttpResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=factura_{factura.numeroFactura}.pdf'
+
+    return response

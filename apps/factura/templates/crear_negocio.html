@@ -11,6 +11,13 @@
             <div class="card shadow-lg p-4">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
+
+                    {{ form.as_p }}
+                    {% comment %} {% if error_message %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error_message }}
+                    </div>
+                    {% endif %}
                     <div class="mb-3">
                         <label for="id_razonSocial" class="form-label">Razón Social</label>
                         {{ form.razonSocial }}
@@ -38,7 +45,7 @@
                     <div class="mb-3">
                         <label for="id_email" class="form-label">Correo Electrónico</label>
                         {{ form.email }}
-                    </div>
+                    </div> {% endcomment %}
                     <button type="submit" class="btn btn-primary w-100">Registrar Negocio</button>
                     <a href="{% url 'factura:inicio_negocios' %}" class="btn btn-danger w-100 mt-1">Volver a negocioso</a>
                 </form>

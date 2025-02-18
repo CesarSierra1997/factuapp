@@ -32,6 +32,7 @@ class ProductoServicio(models.Model):
 
 
 class Factura(models.Model):
+    negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE, blank=False, null=False, related_name='facturas')
     fecha = models.DateTimeField('Fecha', auto_now_add=True)
     numeroFactura = models.BigIntegerField('Número de factura', blank=False, null=False, unique=True)
 

@@ -6,9 +6,11 @@
     <div class="card bg-secondary bg-gradient shadow-lg p-4">
         <div class="d-flex justify-content-between align-items-center">
             {% if negocio.logo %}
-                <img src="{{ negocio.logo }}" alt="Logo del negocio" class="img-thumbnail me-3" width="100">
+            <img src="{{ negocio.logo.url }}" alt="Logo del negocio" 
+            class="img-thumbnail shadow-lg me-3" width="100">
+        
             {% endif %}
-            <div class="card border-0 p-2" >
+            <div class="container p-2" >
                 <h2 class="fw-bold">{{ negocio.razonSocial }}</h2>
                 <p class="text-muted mb-1">NIT: {{ negocio.nit }}</p>
                 <p class="mb-1"><strong>Teléfono:</strong> {{ negocio.telefono }}</p>
@@ -24,50 +26,66 @@
         </div>
     </div>
 
-    <div class="mt-5">
-        <div class="table-container">
-            <h3>Facturas</h3>
-            <div class="busqueda_exportar_respuestas">
-                <input type="text" id="publicSearch" placeholder="Buscar en facturas">
-            </div>
-        
-            <table id="publicTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Fecha</th>
-                        <th>Factura No</th>
-                        <th>Cliente</th>
-                        <th>tolal</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for factura in facturas %}
-                    <tr>
-                        <td>{{ factura.fecha}}</td>
-                        <td>{{ factura.numeroFactura}}</td>
-                        <td>{{ factura.nombreCliente}}</td>
-                        <td>{{ factura.total}}</td>
-                        {% if factura.pagado %}
-                        <td>Pago</td>
-                        {% else %}
-                        <td>Pendiente</td>
-                        {% endif %}
-                    </tr>
-                    {% empty %}
-                    <p class="text-muted">No hay facturas registradas para este negocio.</p>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="table-container mt-5">
+        <h3>Facturas</h3>
+        <div class="busqueda_exportar_respuestas">
+            <input type="text" id="publicSearch" placeholder="Buscar en facturas">
         </div>
-        
-
+        <div class="table-responsive">
+        <table id="detalles-table" class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Factura No</th>
+                    <th>Cliente</th>
+                    <th>tolal</th>
+                    <th>Estado</th>
+                    <th>Opciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for factura in facturas %}
+                <tr>
+                    <td>{{ factura.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ factura.numeroFactura}}</td>
+                    <td>{{ factura.nombreCliente}}</td>
+                    <td>{{ factura.total}}</td>
+                    {% if factura.pagado %}
+                    <td>Pago</td>
+                    {% else %}
+                    <td>Pendiente</td>
+                    {% endif %}
+                    <td><a href="{% url 'factura:ver_factura' factura.id %}" class="span-action">Ver</a></td>
+                </tr>
+                {% empty %}
+                <p class="text-muted">No hay facturas registradas para este negocio.</p>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-
+    
     <div class="my-4">
         <a href="{% url 'factura:crear_factura' negocio.id %}" class="btn btn-success">Crear Nueva Factura</a>
         <a href="{% url 'factura:inicio_negocios' %}" class="btn btn-secondary">Ir a Negocios</a>
     </div>
 </div>
+
+<script>
+    document.getElementById("publicSearch").addEventListener("keyup", function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#detalles-table tbody tr");
+
+        rows.forEach(row => {
+            let match = false;
+            row.querySelectorAll("td").forEach(td => {
+                if (td.textContent.toLowerCase().includes(filter)) {
+                    match = true;
+                }
+            });
+            row.style.display = match ? "" : "none";
+        });
+    });
+
+
+</script>
 {% endblock index %}

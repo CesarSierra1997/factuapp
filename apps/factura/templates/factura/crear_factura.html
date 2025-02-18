@@ -12,7 +12,9 @@
                 <h5 class="mb-0">{{ negocio.razonSocial }}</h5>
                 <small class="text-muted">NIT {{ negocio.nit }}</small>
             </div>
-            <img src="{{ negocio.logo }}" alt="Logo del negocio" class="img-thumbnail" style="width: 80px;">
+            {% if negocio.logo %}
+            <img src="{{ negocio.logo.url }}" alt="Logo del negocio" class="img-thumbnail shadow-lg"  width="100" > 
+            {% endif %}
         </div>
         <hr>
         <h5 class="card-header mb-3">Datos de la Factura</h5>
@@ -52,14 +54,18 @@
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label for="producto-select">Producto</label>
-                    <select id="producto-select" class="form-control">
-                        <option value="">Seleccione un producto</option>
-                        {% for prod in productos %}
-                        <option value="{{ prod.id }}" data-precio="{{ prod.valor }}">
-                            {{ prod.nombre }} ({{ prod.valor }})
-                        </option>
-                        {% endfor %}
-                    </select>
+                    {% if porductos %}
+                        <select id="producto-select" class="form-control">
+                            <option value="">Seleccione un producto</option>
+                            {% for prod in productos %}
+                            <option value="{{ prod.id }}" data-precio="{{ prod.valor }}">
+                                {{ prod.nombre }} ({{ prod.valor }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                    <h5 class="text-center text-muted fw-bold">No hay productos registrados para este negocio.</h5>
+                    {% endif %}
                 </div>
                 <div class="col-md-3">
                     <label for="cantidad">Cantidad</label>
