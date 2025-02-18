@@ -7,47 +7,99 @@
     <title>Factura #{{ factura.numeroFactura }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Arial', sans-serif;
+            margin: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            max-width: 800px;
+            margin: auto;
+            background-color: #ffffff;
         }
+
         .factura-header {
-            margin-bottom: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 15px;
         }
-        .factura-header h5 {
+
+        .factura-header h1 {
             margin: 0;
+            color: #333;
+            font-size: 22px;
         }
-        .factura-header .info {
+
+        .factura-header p {
+            margin: 5px 0;
+            color: #666;
             font-size: 14px;
-            color: gray;
         }
+
+        .factura-info {
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .factura-info p {
+            margin: 3px 0;
+        }
+
         .factura-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
+
         .factura-table th, .factura-table td {
-            border: 1px solid #000;
-            padding: 8px;
+            border: 1px solid #ddd;
+            padding: 10px;
             text-align: left;
         }
+
         .factura-table th {
-            background-color: #f1f1f1;
+            background-color: #007bff;
+            color: white;
+            text-transform: uppercase;
+            font-size: 14px;
         }
+
+        .factura-table td {
+            font-size: 13px;
+        }
+
         .total {
             margin-top: 20px;
+            text-align: right;
+            font-size: 18px;
             font-weight: bold;
+            color: #007bff;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
         }
     </style>
 </head>
 <body>
+
     <div class="factura-header">
-        <h5>{{ factura.negocio.razonSocial }}</h5>
-        <p class="info">NIT {{ factura.negocio.nit }}</p>
-        <p class="info">Factura #{{ factura.numeroFactura }}</p>
-        <p class="info">Cliente: {{ factura.nombreCliente }}</p>
-        <p class="info">Documento: {{ factura.tipoDocumento }} - {{ factura.numeroDocumento }}</p>
-        <p class="info">Correo: {{ factura.email }}</p>
-        <p class="info">Fecha: {{ factura.fecha|date:"d/m/Y H:i" }}</p>
+        <h1>{{ factura.negocio.razonSocial }}</h1>
+        <img src="{{ factura.negocio.logo.url }}" alt="Logo del negocio" class="img-thumbnail shadow-lg" width="100">
+        <p>NIT: {{ factura.negocio.nit }}</p>
+        <p>Factura #{{ factura.numeroFactura }}</p>
+    </div>
+
+    <div class="factura-info">
+        <p><strong>Cliente:</strong> {{ factura.nombreCliente }}</p>
+        <p><strong>Documento:</strong> {{ factura.tipoDocumento }} - {{ factura.numeroDocumento }}</p>
+        <p><strong>Correo:</strong> {{ factura.email }}</p>
+        <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}</p>
     </div>
 
     <table class="factura-table">
@@ -56,7 +108,7 @@
                 <th>Producto</th>
                 <th>Cantidad</th>
                 <th>Precio Unitario</th>
-                <th>Total</th>
+                <th>Subtotal</th>
             </tr>
         </thead>
         <tbody>
@@ -75,18 +127,10 @@
         <p>Total: ${{ factura.total|floatformat:2 }}</p>
     </div>
 
-
-    <!-- Información legal -->
-    <div class="mt-4">
-        <p class="small text-muted">
-            Esta factura es un documento legal emitido por {{ factura.negocio.razonSocial }}. La información contenida es confidencial y destinada únicamente para el receptor. Si usted no es el destinatario, notifique inmediatamente al emisor y elimine este documento.
-        </p>
-        <p class="small text-muted">
-            Todos los precios están sujetos a cambios sin previo aviso y se rigen por los términos y condiciones establecidos por {{ factura.negocio.razonSocial }}.
-        </p>
-        <p class="small text-muted mb-0">
-            © {{ factura.negocio.razonSocial }} - Todos los derechos reservados.
-        </p>
+    <div class="footer">
+        <p>Esta factura es un documento legal emitido por {{ factura.negocio.razonSocial }}.</p>
+        <p>© {{ factura.negocio.razonSocial }} - Todos los derechos reservados.</p>
     </div>
+
 </body>
 </html>
