@@ -1,6 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, CreateView, DetailView, ListView, UpdateView, DeleteView, FormView
-from django.forms import inlineformset_factory
+from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q
@@ -188,14 +188,6 @@ class VerFactura(DetailView):
         context['factura'] = self.object
         return context
 
-
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
-from django.template.loader import render_to_string
-from io import BytesIO
-from xhtml2pdf import pisa
-import os
-from django.conf import settings
 
 def generar_pdf(request, factura_id):
     # Obtener la factura
