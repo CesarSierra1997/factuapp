@@ -60,24 +60,32 @@
             </table>
         </div>
 
-        <!-- Botones de acción -->
-        <div class="d-flex justify-content-between mt-4">
-            <!-- Botón para generar el PDF -->
-                <button type="button" class="btn btn-success" onclick="window.print();">
-                    Imprimir Factura
-                </button>
-                <a href="{% url 'factura:generar_pdf' factura.id %}" class="btn btn-info">
-                    Generar PDF
-                </a>
-
-                <a href="https://wa.me/?text=Factura%20#{{ factura.numeroFactura }}%20de%20{{ factura.negocio.razonSocial }}%20por%20$%20{{ factura.total|floatformat:2 }}" class="btn btn-success" target="_blank">
-                    Compartir por WhatsApp
-                </a>
-                <a href="mailto:?subject=Factura%20#{{ factura.numeroFactura }}&body=Factura%20de%20{{ factura.negocio.razonSocial }}%20por%20$%20{{ factura.total|floatformat:2 }}%20-%20{{ factura.negocio.url }}" class="btn btn-danger" target="_blank">
-                    Compartir por Email
-                </a>
-            </div>
+        <!-- QR Code -->
+        <div class="mt-4">
+            <img src="data:image/png;base64,{{ factura.qrCode }}" alt="QR Code" class="img-thumbnail shadow-lg"  width="200"> 
         </div>
+
+        {% if request.user.is_authenticated  %}
+                <!-- Botones de acción -->
+                <div class="d-flex justify-content-between mt-4">
+                    <!-- Botón para generar el PDF -->
+                        <button type="button" class="btn btn-success" onclick="window.print();">
+                            Imprimir 
+                        </button>
+                        <a href="{% url 'factura:generar_pdf' factura.id %}" class="btn btn-info">
+                            Generar PDF
+                        </a>
+        
+                        <a href="https://wa.me/?text=Factura%20#{% url 'factura:generar_pdf' factura.id %}" class="btn btn-success" target="_blank">
+                            Compartir por WhatsApp
+                        </a>
+                        <a href="mailto:?subject=Factura%20#{{ factura.numeroFactura }}&body=Factura%20de%20{{ factura.negocio.razonSocial }}%20por%20$%20{{ factura.total|floatformat:2 }}%20-%20{{ factura.negocio.url }}" class="btn btn-danger" target="_blank">
+                            Compartir por Email
+                        </a>
+                    </div>
+                </div>
+        {% endif %}
+
 
         <!-- Información legal -->
         <div class="mt-4">
@@ -91,10 +99,11 @@
                 © {{ factura.negocio.razonSocial }} - Todos los derechos reservados.
             </p>
         </div>
-
+        {% if request.user.is_authenticated  %}
         <a href="{% url 'factura:detalle_negocio' factura.negocio.id %}" class="btn btn-secondary w-100 mt-3">
             Volver al negocio
         </a>
+        {% endif %}
     </div>
 </div>
 

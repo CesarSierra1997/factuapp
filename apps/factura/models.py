@@ -1,5 +1,6 @@
 from django.db import models
 from apps.usuario.models import Usuario
+import base64
 
 class Negocio(models.Model):
     razonSocial = models.CharField('Nombre', max_length=100, blank=False, null=False)
@@ -49,6 +50,8 @@ class Factura(models.Model):
 
     total = models.DecimalField('Total', max_digits=10, decimal_places=2, blank=True, null=True)
     pagado = models.BooleanField('Pagado', default=False)
+    # Almacenamiento del QR en formato Base64
+    qrCode = models.TextField('QR Code', blank=True, null=True)
 
     def calcular_total(self):
         total = sum(detalle.subtotal() for detalle in self.detalles.all())

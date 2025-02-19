@@ -1,136 +1,117 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Factura #{{ factura.numeroFactura }}</title>
+    <title>Factura</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 40px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            max-width: 800px;
-            margin: auto;
-            background-color: #ffffff;
-        }
-
-        .factura-header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 15px;
-        }
-
-        .factura-header h1 {
+            font-family: Arial, sans-serif;
             margin: 0;
-            color: #333;
-            font-size: 22px;
+            padding: 0;
+            background-color: #f8f9fa;
         }
-
-        .factura-header p {
+        .container {
+            width: 80%;
+            margin: 10px auto;
+            background: #fff;
+            padding: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo img {
+            width: 100px;
+            height: 100px;
+        }
+        hr {
+            border: 1px solid #ddd;
+        }
+        .details p {
             margin: 5px 0;
-            color: #666;
-            font-size: 14px;
         }
-
-        .factura-info {
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .factura-info p {
-            margin: 3px 0;
-        }
-
-        .factura-table {
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
         }
-
-        .factura-table th, .factura-table td {
+        table, th, td {
             border: 1px solid #ddd;
-            padding: 10px;
+        }
+        th, td {
             text-align: left;
         }
-
-        .factura-table th {
-            background-color: #007bff;
+        th {
+            background-color: #333;
             color: white;
-            text-transform: uppercase;
-            font-size: 14px;
         }
-
-        .factura-table td {
-            font-size: 13px;
-        }
-
-        .total {
-            margin-top: 20px;
-            text-align: right;
-            font-size: 18px;
-            font-weight: bold;
-            color: #007bff;
-        }
-
-        .footer {
-            margin-top: 30px;
-            font-size: 12px;
-            color: #666;
+        .qr-code {
             text-align: center;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
+            margin-top: 20px;
+        }
+        .legal {
+            font-size: 12px;
+            color: #555;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-
-    <div class="factura-header">
-        <h1>{{ factura.negocio.razonSocial }}</h1>
-        <img src="{{ factura.negocio.logo.url }}" alt="Logo del negocio" class="img-thumbnail shadow-lg" width="100">
-        <p>NIT: {{ factura.negocio.nit }}</p>
-        <p>Factura #{{ factura.numeroFactura }}</p>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h5>{{ factura.negocio.razonSocial }}</h5>
+                <small>NIT {{ factura.negocio.nit }}</small>
+            </div>
+            <div class="logo">
+                <img src="{{ logo_url }}" alt="Logo del negocio">
+            </div>
+        </div>
+        <hr>
+        <h5>Factura No. {{ factura.numeroFactura }}</h5>
+        <div class="details">
+            <p><strong>Cliente:</strong> {{ factura.nombreCliente }}</p>
+            <p><strong>Documento:</strong> {{ factura.tipoDocumento }} - {{ factura.numeroDocumento }}</p>
+            <p><strong>Correo:</strong> {{ factura.email }}</p>
+            <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y" }}</p>
+        </div>
+        <h5>Detalles de la Factura</h5>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detalle in factura.detalles.all %}
+                <tr>
+                    <td>{{ detalle.producto.nombre }}</td>
+                    <td>{{ detalle.cantidad }}</td>
+                    <td>${{ detalle.producto.valor|floatformat:2 }}</td>
+                    <td>${{ detalle.subtotal|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align: right; font-weight: bold;">Total:</td>
+                    <td style="font-weight: bold;">${{ factura.total|floatformat:0 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="qr-code">
+            <img src="data:image/png;base64,{{ factura.qrCode }}" alt="QR Code" width="200">
+        </div>
+        <div class="legal">
+            <p>Esta factura es un documento legal emitido por {{ factura.negocio.razonSocial }}.</p>
+            <p>Todos los precios están sujetos a cambios sin previo aviso y se rigen por los términos y condiciones establecidos por {{ factura.negocio.razonSocial }}.</p>
+            <p>© {{ factura.negocio.razonSocial }} - Todos los derechos reservados.</p>
+        </div>
     </div>
-
-    <div class="factura-info">
-        <p><strong>Cliente:</strong> {{ factura.nombreCliente }}</p>
-        <p><strong>Documento:</strong> {{ factura.tipoDocumento }} - {{ factura.numeroDocumento }}</p>
-        <p><strong>Correo:</strong> {{ factura.email }}</p>
-        <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}</p>
-    </div>
-
-    <table class="factura-table">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Precio Unitario</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for detalle in factura.detalles.all %}
-            <tr>
-                <td>{{ detalle.producto.nombre }}</td>
-                <td>{{ detalle.cantidad }}</td>
-                <td>${{ detalle.producto.valor|floatformat:2 }}</td>
-                <td>${{ detalle.subtotal|floatformat:2 }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <div class="total">
-        <p>Total: ${{ factura.total|floatformat:2 }}</p>
-    </div>
-
-    <div class="footer">
-        <p>Esta factura es un documento legal emitido por {{ factura.negocio.razonSocial }}.</p>
-        <p>© {{ factura.negocio.razonSocial }} - Todos los derechos reservados.</p>
-    </div>
-
 </body>
 </html>

@@ -1,11 +1,16 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, CreateView, DetailView, ListView, UpdateView, DeleteView, FormView
 from django.forms import inlineformset_factory
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q
 from django.http import Http404,HttpResponse, HttpResponseRedirect
 import json
+import qrcode
+import qrcode.image.pil
+from django.utils.html import escape
+from io import BytesIO
+from xhtml2pdf import pisa
 from django.utils import timezone
 from django.contrib import messages
 from datetime import datetime
@@ -49,8 +54,6 @@ class DetailNegocio(LoginRequiredMixin, DetailView):
         context['facturas'] = Factura.objects.filter(negocio=self.object)
         return context
     
-
-
 class EditarNegocio(LoginRequiredMixin, UpdateView):
     model = Negocio
     fields = ['razonSocial', 'nit', 'logo', 'descripcion', 'sitioweb', 'telefono', 'email']
@@ -111,7 +114,7 @@ class CrearProducto(LoginRequiredMixin, CreateView):
         context['negocio'] = Negocio.objects.get(pk=self.kwargs['negocio_id'])
         return context
 
-class CrearFactura( CreateView):
+class CrearFactura(CreateView):
     model = Factura
     form_class = FormFactura
     template_name = "factura/crear_factura.html"
@@ -147,6 +150,19 @@ class CrearFactura( CreateView):
             )
         self.object.calcular_total()
 
+        # Generar el código QR con la URL pública de la factura
+        factura_url = f"https://factuapp.onrender.com{reverse('factura:ver_factura', kwargs={'factura_id': self.object.id})}"
+        qr = qrcode.make(factura_url, image_factory=qrcode.image.pil.PilImage)
+
+        # Convertir QR a Base64
+        qr_io = BytesIO()
+        qr.save(qr_io, format='PNG')
+        qr_base64 = base64.b64encode(qr_io.getvalue()).decode('utf-8')
+
+        # Guardar QR en Base64 en la base de datos
+        self.object.qrCode = qr_base64
+        self.object.save()
+
         # Redirigimos normalmente
         return HttpResponseRedirect(self.get_success_url())
 
@@ -162,7 +178,7 @@ class CrearFactura( CreateView):
     def get_success_url(self):
         return reverse_lazy("factura:detalle_negocio", kwargs={"negocio_id": self.object.negocio.id})
     
-class VerFactura(LoginRequiredMixin, DetailView):
+class VerFactura(DetailView):
     model = Factura
     template_name = 'factura/ver_factura.html'
     pk_url_kwarg = 'factura_id'
@@ -173,30 +189,35 @@ class VerFactura(LoginRequiredMixin, DetailView):
         return context
 
 
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
-from xhtml2pdf import pisa
+from django.template.loader import render_to_string
 from io import BytesIO
-from .models import Factura
+from xhtml2pdf import pisa
+import os
+from django.conf import settings
 
 def generar_pdf(request, factura_id):
-    # Obtener la factura a partir de su ID
-    factura = Factura.objects.get(id=factura_id)
+    # Obtener la factura
+    factura = get_object_or_404(Factura, id=factura_id)
 
-    # Renderizar el template con la factura
-    html_content = render(request, 'factura/pdf_template.html', {'factura': factura}).content.decode('utf-8')
+    # Obtener la URL absoluta de la imagen del logo
+    logo_url = request.build_absolute_uri(factura.negocio.logo.url) if factura.negocio.logo else None
+
+    # Renderizar el template con los datos de la factura y la imagen del logo
+    html_content = render_to_string('factura/pdf_template.html', {'factura': factura, 'logo_url': logo_url})
 
     # Crear un objeto BytesIO para almacenar el PDF
     pdf_buffer = BytesIO()
 
-    # Convertir el contenido HTML a PDF
+    # Convertir HTML a PDF
     pisa_status = pisa.CreatePDF(html_content, dest=pdf_buffer)
 
-    # Si la conversión fue exitosa, enviar el PDF como respuesta
+    # Si hay errores al generar el PDF
     if pisa_status.err:
         return HttpResponse('Error al generar el PDF', status=500)
 
-    # Crear la respuesta HTTP para la descarga del PDF
+    # Responder con el PDF generado
     pdf_buffer.seek(0)
     response = HttpResponse(pdf_buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=factura_{factura.numeroFactura}.pdf'
